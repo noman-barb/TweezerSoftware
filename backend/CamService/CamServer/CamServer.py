@@ -400,7 +400,7 @@ class CamServer:
             return {"success": True, "msg": "Saving started", "data": []}
 
 
-        @self.post("/stop_saving/")
+        @self.app.post("/stop_saving/")
         def stop_saving():
             self.save_folder = None
             return {"success": True, "msg": "Saving stopped", "data": []}

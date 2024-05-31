@@ -60,7 +60,7 @@ class CamServer:
 
         self.save_folder = None
 
-        self.root_folder = "F:/temp_cam_data/images/"
+        self.root_folder = "F:/temp_cam_data/images/" + str(int(time.time()*1e6)) + "/"
 
 
 
@@ -173,10 +173,10 @@ class CamServer:
                         self.channel = None
                         print("Error tracking", e)
 
-
                 if self.save_folder is not None:
-                    # save the image
-                    cv2.imwrite(os.path.join(self.save_folder, str(image_id) + ".bmp"), self.image)
+                    # cv2.imwrite(os.path.join(self.save_folder, str(image_id) + ".png"), image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+                    # save image in bmp
+                    cv2.imwrite(self.save_folder + str(image_id) + ".bmp" , image)
                     
 
 
@@ -353,6 +353,7 @@ class CamServer:
         @self.app.post("/stop_camera/")
         def stop_camera():
             print("Stopping camera")
+            self.save_folder = None
             if not self.is_camera_active:
                 return {"success": True, "msg": "Camera not active", "data": []}
 
@@ -391,13 +392,18 @@ class CamServer:
         @self.app.post("/start_saving/")
         def start_saving(data: dict):
 
+            if data["relative_folder_path"] is None:
+                return {"success": False, "msg": "Folder path not provided", "data": []}
+
             relative_path = data["relative_folder_path"]
-            self.save_folder = os.path.join(self.root_folder, relative_path)
+            # get time now in milliseconds
+            
+            self.save_folder = self.root_folder + "/" + relative_path
             # create folder if it doesn't exist
             if not os.path.exists(self.save_folder):
                 os.makedirs(self.save_folder)
             
-            return {"success": True, "msg": "Saving started", "data": []}
+            return {"success": True, "msg": "Saving started", "data": [{"folder_path": self.save_folder}]}
 
 
         @self.app.post("/stop_saving/")

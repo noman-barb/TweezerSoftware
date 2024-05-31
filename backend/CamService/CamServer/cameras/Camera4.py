@@ -97,7 +97,7 @@ class Camera(AbstractCamera.AbstractCamera):
                 image_id = 0
 
             delta_time = time.time() - _start_time
-            self.stop_event.wait(max(0.01, self.wait_time - delta_time))
+            self.stop_event.wait(max(0.001, self.wait_time - delta_time))
             
 
         print("6")

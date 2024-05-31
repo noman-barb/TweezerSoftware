@@ -1,9 +1,11 @@
 module.exports = {
     apps: [
       {
-        name: 'Track Service',
-        script: 'TrackService.py',
-        cwd: 'Z:/backend/TrackService/'
+        name: 'Tracking Service',
+        script: 'TrackingService1.py',
+        cwd: 'Z:/backend/TrackService/',
+        exec_mode: 'fork',
+        args: '--n_procs 20'
       },
       {
         name: 'Camera Service 1',

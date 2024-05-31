@@ -58,6 +58,10 @@ class CamServer:
 
         self.init_tracking()
 
+        self.save_folder = None
+
+        self.root_folder = "F:/temp_cam_data/images/"
+
 
 
 
@@ -168,6 +172,11 @@ class CamServer:
                         self.stub = None
                         self.channel = None
                         print("Error tracking", e)
+
+
+                if self.save_folder is not None:
+                    # save the image
+                    cv2.imwrite(os.path.join(self.save_folder, str(image_id) + ".bmp"), self.image)
                     
 
 
@@ -378,6 +387,23 @@ class CamServer:
 
             return {"success": True, "msg": "Camera stopped", "data": [{"camera_id": temp}]}
 
+
+        @self.app.post("/start_saving/")
+        def start_saving(data: dict):
+
+            relative_path = data["relative_folder_path"]
+            self.save_folder = os.path.join(self.root_folder, relative_path)
+            # create folder if it doesn't exist
+            if not os.path.exists(self.save_folder):
+                os.makedirs(self.save_folder)
+            
+            return {"success": True, "msg": "Saving started", "data": []}
+
+
+        @self.post("/stop_saving/")
+        def stop_saving():
+            self.save_folder = None
+            return {"success": True, "msg": "Saving stopped", "data": []}
 
 
         # websocket endpoint

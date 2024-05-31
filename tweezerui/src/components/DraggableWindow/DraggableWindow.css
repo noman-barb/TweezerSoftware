@@ -1,0 +1,102 @@
+/* Base styles for the draggable window */
+.draggable-window {
+    background-color: #333; /* Dark background for the window */
+    color: white; /* Light text color for readability */
+    border: 2px solid #555; /* Slightly lighter border for some depth */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Shadow for 3D effect */
+  }
+  
+  /* Header styles */
+  .window-header {
+    padding: 10px; /* Spacing inside the header */
+    background-color: #222; /* Even darker shade for the header */
+    cursor: move; /* Cursor indicates the header is draggable */
+    display: flex; /* Flex layout for elements inside the header */
+    justify-content: space-between; /* Space between elements */
+    align-items: center; /* Vertically center elements */
+  }
+  
+  /* Button styling */
+  .button {
+    background-color: #444; /* Dark background for buttons */
+    border: none; /* No border */
+    color: white; /* White text */
+    padding: 5px 10px; /* Padding around text */
+    cursor: pointer; /* Indicate the button is clickable */
+    border-radius: 5px; /* Rounded corners */
+  }
+  
+  .button:hover {
+    background-color: #555; /* Lighter on hover for feedback */
+  }
+  
+  /* Icon inside the button (e.g., minimize icon) */
+  .icon {
+    display: block;
+  }
+  
+  /* Content area styles */
+  .window-content {
+    padding: 20px; /* Space inside the content area */
+    overflow: auto; 
+  }
+  
+  /* Resize handles customized for dark theme */
+  .resizable-handle {
+    background-color: #aaa; /* Visible handles */
+    opacity: 0.5; /* Semi-transparent */
+  }
+  
+  .resizable-handle:hover {
+    opacity: 1; /* Fully visible when hovered */
+  }
+  
+  /* Positioning each handle */
+  .resizable-handle-top,
+  .resizable-handle-bottom {
+    left: 50%;
+    width: 100%;
+    height: 10px;
+    cursor: ns-resize;
+  }
+  
+  .resizable-handle-right,
+  .resizable-handle-left {
+    top: 50%;
+    width: 10px;
+    height: 100%;
+    cursor: ew-resize;
+  }
+  
+  .resizable-handle-top-right,
+  .resizable-handle-bottom-right,
+  .resizable-handle-bottom-left,
+  .resizable-handle-top-left {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .resizable-handle-top-right {
+    right: 0;
+    top: 0;
+    cursor: ne-resize;
+  }
+  
+  .resizable-handle-bottom-right {
+    right: 0;
+    bottom: 0;
+    cursor: se-resize;
+  }
+  
+  .resizable-handle-bottom-left {
+    left: 0;
+    bottom: 0;
+    cursor: sw-resize;
+  }
+  
+  .resizable-handle-top-left {
+    left: 0;
+    top: 0;
+    cursor: nw-resize;
+  }
+  

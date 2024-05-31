@@ -7,7 +7,7 @@ from vmbpy import *
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
-# from . import AbstractCamera
+from . import AbstractCamera
 
 
 # All frames will either be recorded in this format, or transformed to it before being displayed
@@ -42,7 +42,7 @@ class Handler:
 
         cam.queue_frame(frame)
 
-class Camera():
+class Camera(AbstractCamera.AbstractCamera):
     def __init__(self):
         self.is_real = IS_REAL
         # super().__init__( is_real=self.is_real)

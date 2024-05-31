@@ -282,6 +282,34 @@ function CameraPreview() {
 
 
   const handleStreamToggle = async (cameraId) => {
+
+
+    // check if min max values are respected
+    const formValues = cameras[cameraId].formValues;
+
+    let error = false;
+
+    if (formValues.targetFPS < cameras[cameraId].formValuesMinMax.targetFPS.min || formValues.targetFPS > cameras[cameraId].formValuesMinMax.targetFPS.max) {
+      showToast(`Target FPS must be between ${cameras[cameraId].formValuesMinMax.targetFPS.min} and ${cameras[cameraId].formValuesMinMax.targetFPS.max}`, "error");
+      error = true;
+    }
+
+    if (formValues.exposureTime < cameras[cameraId].formValuesMinMax.exposureTime.min || formValues.exposureTime > cameras[cameraId].formValuesMinMax.exposureTime.max) {
+      showToast(`Exposure Time must be between ${cameras[cameraId].formValuesMinMax.exposureTime.min} and ${cameras[cameraId].formValuesMinMax.exposureTime.max}`, "error");
+      error = true;
+
+    }
+
+    if (formValues.gain < cameras[cameraId].formValuesMinMax.gain.min || formValues.gain > cameras[cameraId].formValuesMinMax.gain.max) {
+      showToast(`Gain must be between ${cameras[cameraId].formValuesMinMax.gain.min} and ${cameras[cameraId].formValuesMinMax.gain.max}`, "error");
+      error = true;
+    }
+
+    if (error) return;
+
+
+
+
     const isStreaming = cameras[cameraId].isStreaming;
     setCameras(prevCameras => ({
       ...prevCameras,
@@ -553,7 +581,7 @@ function CameraPreview() {
   };
 
   const renderCameraModal = (cameraId) => {
-    const { showModalSettings, formValues, comment, isVirtual } = cameras[cameraId];
+    const { showModalSettings, formValues, comment, isVirtual, formValuesMinMax } = cameras[cameraId];
     const handleCloseModal = () => setCameras(prevCameras => ({
       ...prevCameras,
       [cameraId]: {
@@ -593,6 +621,11 @@ function CameraPreview() {
             <Form.Group className="mb-3">
               <Form.Label>Target Streaming FPS</Form.Label>
               <Form.Control name="targetFPS" type="number" placeholder="Enter FPS" onChange={(e) => handleInputChange(e, cameraId)} value={formValues.targetFPS} />
+              {formValues.targetFPS < formValuesMinMax.targetFPS.min || formValues.targetFPS > formValuesMinMax.targetFPS.max ? (
+                <Form.Text style={{ color: 'red' }}>
+                  Value must be between {formValuesMinMax.targetFPS.min} and {formValuesMinMax.targetFPS.max}
+                </Form.Text>
+              ) : null}
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Exposure Time (ms)</Form.Label>
@@ -604,6 +637,11 @@ function CameraPreview() {
                 onChange={(e) => handleInputChange(e, cameraId)}
                 value={formValues.exposureTime}
               />
+              {formValues.exposureTime < formValuesMinMax.exposureTime.min || formValues.exposureTime > formValuesMinMax.exposureTime.max ? (
+                <Form.Text style={{ color: 'red' }}>
+                  Value must be between {formValuesMinMax.exposureTime.min} and {formValuesMinMax.exposureTime.max}
+                </Form.Text>
+              ) : null}
             </Form.Group>
 
             <Form.Group className="mb-3">
@@ -618,6 +656,11 @@ function CameraPreview() {
                 onChange={(e) => handleInputChange(e, cameraId)}
                 value={formValues.gain}
               />
+              {formValues.gain < formValuesMinMax.gain.min || formValues.gain > formValuesMinMax.gain.max ? (
+                <Form.Text style={{ color: 'red' }}>
+                  Value must be between {formValuesMinMax.gain.min} and {formValuesMinMax.gain.max}
+                </Form.Text>
+              ) : null}
             </Form.Group>
 
 

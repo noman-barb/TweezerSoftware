@@ -285,7 +285,33 @@ class CamServer:
                 self.is_camera_active = True
                 self.camera_instance = self.instantiate_camera(camera_id)
                 self.camera_instance.set_image_source_path(data["folder_path"])
-                self.camera_instance.set_frame_rate(float(data["fps"]))
+                
+                fps = float(data["fps"])
+                gain = float(data["gain"])
+                exposure = float(data["exposure_time"])
+
+                min_fps = 0.1
+                max_fps = 30
+                min_gain = 0.0
+                max_gain = 100.0
+                min_exposure = 0.0
+                max_exposure = 1000.0
+
+                # return if these are not in the range
+                if fps < min_fps or fps > max_fps:
+                    return {"success": False, "msg": "FPS out of range", "data": []}
+
+                if gain < min_gain or gain > max_gain:
+                    return {"success": False, "msg": "Gain out of range", "data": []}
+
+                if exposure < min_exposure or exposure > max_exposure:
+                    return {"success": False, "msg": "Exposure out of range", "data": []}
+
+
+                self.camera_instance.set_frame_rate(fps)
+                self.camera_instance.set_exposure_time(exposure)
+                self.camera_instance.set_gain(gain)
+
                 self.camera_instance.set_on_update_callback(on_update_callback)
                 self.request_locate = data["request_locate"]
                 self.camera_instance.start()

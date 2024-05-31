@@ -70,6 +70,12 @@ export const CanvasProvider = ({ children }) => {
           gain: storedCameras[1]?.formValues?.gain || "1.0",
           requestLocate: storedCameras[1]?.formValues?.requestLocate || false,
         },
+        formValuesMinMax:{
+          exposureTime: { min: 0.0, max: 2000.0 },
+          gain: { min: 0.0, max: 100.0 },
+          targetFPS: { min: 0.1, max: 30 }
+
+        },
         comment: "Select the camera ID from the dropdown list",
         isVirtual: false,
         fps: 0,
@@ -92,6 +98,12 @@ export const CanvasProvider = ({ children }) => {
           exposureTime: storedCameras[2]?.formValues?.exposureTime || "10.0",
           gain: storedCameras[2]?.formValues?.gain || "1.0",
           requestLocate: storedCameras[2]?.formValues?.requestLocate || false,
+        },
+        formValuesMinMax:{
+          exposureTime: { min: 0.0, max: 2000.0 },
+          gain: { min: 0.0, max: 100.0 },
+          targetFPS: { min: 0.1, max: 30 }
+
         },
         comment: "Select the camera ID from the dropdown list",
         isVirtual: false,

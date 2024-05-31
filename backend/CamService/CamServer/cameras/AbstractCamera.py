@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 
 
 
-class AbstractCamera(ABC):
+class AbstractCamera():
 
     def __init__(self, is_real=True, image_source_path = "", exposure_time = 0.0, gain = 0.0):
         self.is_real = is_real
@@ -23,11 +23,11 @@ class AbstractCamera(ABC):
 
 
     def set_exposure_time(self, exposure_time):
-        raise NotImplementedError("Subclass must implement this method")
+        self.exposure_time = exposure_time
 
 
     def set_gain(self, gain):
-        raise NotImplementedError("Subclass must implement this method")
+        self.gain = gain
 
 
     def get_exposure_time(self):

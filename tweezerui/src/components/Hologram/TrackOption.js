@@ -14,7 +14,7 @@ function TrackBar() {
     
     const [locateWebsocket, setLocateWebsocket] = useState(null);
 
-    const trackServerUrl = `http://${serverInfo.trackserver[1].ip}:${serverInfo.trackserver[1].port}`;
+    const trackServerUrl = `http://${serverInfo.trackserver[1].ip}:${serverInfo.trackserver[1].portHTTP}`;
 
     const toggle = () => {
         setTrackOptions(prev => ({ ...prev, isOpenTrackOption: !prev.isOpenTrackOption }));
@@ -128,7 +128,7 @@ function TrackBar() {
             }
 
             const connectToWebSocketForTrackDetails = () => {
-                const ws = new WebSocket("ws://10.0.63.153:4011/ws");
+                const ws = new WebSocket("ws://10.0.63.153:4012/ws");
                 ws.onmessage = (event) => {
                     // the data has x and y which are arrays of x and y coordinates of the particles
                     // show the particles on the canvasRefs[3] as a scatter plot

@@ -34,16 +34,20 @@ export const CanvasProvider = ({ children }) => {
   const localStorageIDs = {
     "cameras": "cameras",
     "cameraserver": "cameraserver",
-    "trackoptions": "trackoptions"
+    "trackoptions": "trackoptions",
+    "heatoptions": "heatoptions"
   }
 
   const [serverInfo, setServerInfo] = useState({
     "camserver": {
-      1: { "ip": "10.0.63.153", "port": "4001", "username": "", "password": "" },
-      2: { "ip": "10.0.63.153", "port": "4002", "username": "", "password": "" }
+      1: { "ip": "10.0.63.153", "portHTTP": "4001", "username": "", "password": "" , "portWS": "4003" },
+      2: { "ip": "10.0.63.153", "portHTTP": "4002", "username": "", "password": "" , "portWS": "4004" }
     },
     "trackserver": {
-      1: { "ip": "10.0.63.153", "port": "4011", "username": "", "password": "" }
+      1: { "ip": "10.0.63.153", "portHTTP": "4011", "username": "", "password": "", "portWS": "4012" },
+    },
+    "heaterserver": {
+      1: { "ip": "10.0.63.153", "portHTTP": "4031", "username": "", "password": "", "portWS": "4031" },
     }
   });
 
@@ -121,6 +125,8 @@ export const CanvasProvider = ({ children }) => {
   }, [cameras]);
 
 
+
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -131,8 +137,6 @@ export const CanvasProvider = ({ children }) => {
     // Load initial camera state from localStorage
     const storedTrackOptions = JSON.parse(localStorage.getItem(localStorageIDs.trackoptions)) || {};
     
-
-
     return {
       receiveStream: false,
       isOnline: false,
@@ -185,6 +189,38 @@ export const CanvasProvider = ({ children }) => {
   /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+  ///////////////// heater state /////////////////
+
+  // const [heater, setHeater] = useState({
+  //   objectiveTemperature: -1,
+  //   setPoint: -1,
+  //   setPointSetAt: 20.0,
+  //   isHeaterServiceOnline: false,
+  //   minSetPoint: 17.5,
+  //   maxSetPoint: 36.0,
+  //   isCollapsed: false,
+  // });
+
+  const [heater, setHeater] = useState(() => {
+    // Load initial camera state from localStorage
+    const storedHeater = JSON.parse(localStorage.getItem(localStorageIDs.heatoptions)) || {};
+    return {
+      objectiveTemperature: -1,
+      setPoint: -1,
+      setPointSetAt: storedHeater.setPointSetAt || 20.0,
+      isHeaterServiceOnline: false,
+      minSetPoint: 17.5,
+      maxSetPoint: 36.0,
+      isCollapsed: storedHeater.isCollapsed || false,
+    };
+  }
+  );
+
+  // save the heater state to local storage on change of isCollapsed
+  useEffect(() => {
+    localStorage.setItem(localStorageIDs.heatoptions, JSON.stringify(heater));
+  }, [heater.isCollapsed]);
+
   return (
     <GlobalContext.Provider value={{ canvasRefs, 
     imageProps, setImageProps, 
@@ -192,7 +228,8 @@ export const CanvasProvider = ({ children }) => {
     localStorageIDs, serverInfo, setServerInfo, 
     cameras, setCameras,
     trackOptions, setTrackOptions   ,
-    trackOptionsMinMaxVals
+    trackOptionsMinMaxVals,
+    heater, setHeater
     }}>
       {children}
     </GlobalContext.Provider>

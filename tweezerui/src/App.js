@@ -7,7 +7,7 @@ import Hologram from './components/Hologram/Hologram';
 import Bessel from './components/Bessel/Bessel';
 import Settings from './components/Settings/Settings';
 import DraggableWindow from './components/DraggableWindow/DraggableWindow';
-import CameraPreview from './components/CameraPreview/CameraPreview'; 
+import CameraPreview from './components/CameraPreview/CameraPreview';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Bootstrap CSS
 
@@ -22,11 +22,11 @@ function App() {
   };
 
   return (
-  
-    <div className="app container-fluid" style={{  height: '200vh' }}>
+
+    <div className="app container-fluid" style={{ height: '200vh' }}>
       <div className="row">
-        <div className="col-3" style={{ minWidth: '200px', borderRight: '1px dashed lightgray', height:'100vh' }}>
-          <Tabs>
+        <div className="col-3" style={{ minWidth: '200px', borderRight: '1px dashed lightgray', height: '100vh' }}>
+          {/* <Tabs>
             <TabList>
             <div className="form-check form-switch fs-5">
               <Tab>Hologram</Tab>
@@ -41,7 +41,8 @@ function App() {
             <TabPanel>
               <Bessel />
             </TabPanel>
-          </Tabs>
+          </Tabs> */}
+          <Hologram />
         </div>
         <div className="col-9" style={{ minWidth: '900px' }}>
           <CameraPreview />
@@ -49,12 +50,12 @@ function App() {
             <FontAwesomeIcon icon={faTools} />
           </button>
 
-    
+
 
         </div>
       </div>
     </div>
-   
+
   );
 }
 

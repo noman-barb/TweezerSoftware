@@ -196,7 +196,7 @@ class CamServer:
         @self.app.get("/heartbeat")
         def get_heartbeat():
             self.last_hearbeat_time = time.time()
-            return {"success": True, "msg": "Server is running", "data": []}
+            return {"success": True, "msg": "Server is running", "data": {"is_streaming": self.is_camera_active, "camera_id": self.camera_id}}
 
         @self.app.get("/get_camera_details")
         def get_camera_ids():

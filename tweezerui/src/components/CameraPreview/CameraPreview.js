@@ -10,10 +10,6 @@ import axios from 'axios';
 import { useGlobalContext } from '../../GlobalContext';
 
 
-const camServerURLs = {
-  1: "http://10.0.63.153:4001",
-  2: "http://10.0.63.153:4002"
-};
 
 function CameraPreview() {
   const [allCameras, setAllCameras] = useState([]);
@@ -89,12 +85,20 @@ function CameraPreview() {
     const fetchHeartbeat = (cameraId) => {
 
 
-      const baseURL = camServerURLs[cameraId];
+      const baseURL = "http://" + serverInfo.camserver[cameraId].ip + ":" + serverInfo.camserver[cameraId].portHTTP;
+      
       const endpoint = '/heartbeat';
 
+      const api = baseURL + endpoint;
 
-      axios.get(baseURL + endpoint)
+      console.log(api);
+
+    
+
+
+      axios.get(api)
         .then((response) => {
+
 
           setCameras(prevCameras => ({
             ...prevCameras,
@@ -123,37 +127,6 @@ function CameraPreview() {
       fetchHeartbeat(2);
     }, 2000);
 
-    // fetch /get/is_stream_active of both the servers
-
-    const fetchIsStreamActive = (cameraId) => {
-      const baseURL = camServerURLs[cameraId];
-      const endpoint = '/get/is_stream_active';
-
-      axios.get(baseURL + endpoint)
-        .then((response) => {
-          setCameras(prevCameras => ({
-            ...prevCameras,
-            [cameraId]: {
-              ...prevCameras[cameraId],
-              isStreaming: response.data.data.length > 0
-            }
-          }));
-
-        })
-        .catch((error) => {
-          setCameras(prevCameras => ({
-            ...prevCameras,
-            [cameraId]: {
-              ...prevCameras[cameraId],
-              isStreaming: false
-            }
-          }));
-
-        });
-    };
-
-    fetchIsStreamActive(1);
-    fetchIsStreamActive(2);
 
 
 
@@ -168,7 +141,8 @@ function CameraPreview() {
     const fetchCameraDetails = async () => {
       if (cameras[1].showModalSettings || cameras[2].showModalSettings) {
         try {
-          const response = await axios.get(camServerURLs[1] + "/get_all_camera_details");
+          const baseURL =   "http://" +   serverInfo.camserver[1].ip + ":" + serverInfo.camserver[1].portHTTP;
+          const response = await axios.get(baseURL+ "/get_all_camera_details");
           throwErrorIfNotSuccess(response, null);
 
 
@@ -328,7 +302,7 @@ function CameraPreview() {
     });
 
     try {
-      const endpoint = isStreaming ? 'stop_camera/' : 'start_camera/';
+      const endpoint = isStreaming ? '/stop_camera/' : '/start_camera/';
       const data = isStreaming ? {} : {
         camera_id: cameras[cameraId].formValues.camId,
         fps: cameras[cameraId].formValues.targetFPS,
@@ -339,7 +313,8 @@ function CameraPreview() {
         request_locate: cameras[cameraId].formValues.requestLocate
       };
 
-      const response = await axios.post(camServerURLs[cameraId] + `/${endpoint}`, data);
+      const baseURL = "http://" +  serverInfo.camserver[cameraId].ip + ":" + serverInfo.camserver[cameraId].portHTTP;
+      const response = await axios.post(baseURL + endpoint, data);
 
       throwErrorIfNotSuccess(response, toastId);
 
@@ -388,8 +363,9 @@ function CameraPreview() {
       let dataCount = 0;
       let firstImageReceived = false;
 
-      const ip = camServerURLs[cameraId].replace(/(^\w+:|^)\/\//, '');
-      const websocket = new WebSocket("ws://" + ip + "/ws");
+      const baseURL = serverInfo.camserver[cameraId].ip + ":" + serverInfo.camserver[cameraId].portWS;
+
+      const websocket = new WebSocket("ws://" + baseURL + "/ws");
       webSocketConnections[cameraId] = websocket; // Store the connection
       websocket.binaryType = 'blob';
 

@@ -9,17 +9,23 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { Button, Form } from 'react-bootstrap';
 import { useGlobalContext } from '../../GlobalContext';
 import TrackBar from './TrackOption';
+import Heater from './ObjectiveHeater';
 
 function Hologram() {
     
     const { trackOptions, setTrackOptions } = useGlobalContext();
 
 
-    return (<div>
-
-        <TrackBar trackOptions={trackOptions} setTrackOptions={setTrackOptions} />
-    </div>);
-    
+    return (
+        <div className="container">
+            <div className="row mb-3">
+                <TrackBar trackOptions={trackOptions} setTrackOptions={setTrackOptions} />
+            </div>
+            <div className="row">
+                <Heater />
+            </div>
+        </div>
+    );
 
 }
 

@@ -7,7 +7,7 @@ import image_service_pb2
 import image_service_pb2_grpc
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import os
@@ -37,7 +37,6 @@ socket_data = {
     "mass":[]
 }
 
-websocket_instance = None   
 
 
 
@@ -145,6 +144,9 @@ def process_image_concurrent(image, executor=None, data_map=None):
     # Concatenate all dataframes into a single dataframe
     df_global = pd.concat(results)
 
+  
+        
+
     # save to socket_data
     global socket_data
     socket_data['x'] = df_global['x'].tolist()
@@ -167,7 +169,7 @@ def process_image_concurrent(image, executor=None, data_map=None):
 
     # cv2.destroyAllWindows()
 
-    return df_global
+   
 
 
 # or see if it is launced by pm2
@@ -227,7 +229,7 @@ if __name__ == "__main__":
             image = np.frombuffer(request.image, dtype=np.uint8).reshape((height, width))
 
             # Process the image
-            df = process_image_concurrent(image, executor=executor, data_map=data_map)
+            process_image_concurrent(image, executor=executor, data_map=data_map)
 
             
 
@@ -258,28 +260,20 @@ if __name__ == "__main__":
 
     @app.websocket("/ws")
     async def websocket_endpoint(websocket: WebSocket):
-        global websocket_instance
+      
         global current_image_id
 
-
         await websocket.accept()
-        websocket_instance = websocket
-
+       
         last_image_sent_id = -1
 
         while True:
-
-
-
             try:
                 await asyncio.sleep(0.001)
 
                 if last_image_sent_id == current_image_id:
                     
                     continue
-
-                
-
                 last_image_sent_id = current_image_id
 
                 # send data (socket data)

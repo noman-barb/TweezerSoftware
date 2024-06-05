@@ -152,6 +152,7 @@ class CamServer:
                 if len(image.shape)==3:
                     # convert image to grayscale
                     self.image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                    # self.image = image
                 elif len(image.shape)==2:
                     self.image = image
 

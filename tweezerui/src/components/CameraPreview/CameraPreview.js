@@ -91,9 +91,7 @@ function CameraPreview() {
 
       const api = baseURL + endpoint;
 
-      console.log(api);
-
-    
+     
 
 
       axios.get(api)
@@ -370,7 +368,7 @@ function CameraPreview() {
       websocket.binaryType = 'blob';
 
       const updateFpsAndSpeed = () => {
-        console.log(frameCount, cameraId)
+       
 
         // set the fps and speed for the camera
         const copyFrameCount = frameCount;

@@ -212,6 +212,10 @@ export const CanvasProvider = ({ children }) => {
       minSetPoint: 17.5,
       maxSetPoint: 36.0,
       isCollapsed: storedHeater.isCollapsed || false,
+      timeSeriesSetPoints: null,
+      timeSeriesObjectiveTemperatures: null,
+      timeSeriesTimes: null,
+      lastUpdated: null
     };
   }
   );

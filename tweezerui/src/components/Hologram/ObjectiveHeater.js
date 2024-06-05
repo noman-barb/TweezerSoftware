@@ -24,6 +24,16 @@ function Heater() {
         setHeater(prev => ({ ...prev, isCollapsed: !prev.isCollapsed }));
     };
 
+    const [imageKey, setImageKey] = useState(Date.now());
+
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         setImageKey(Date.now());
+    //     }, 2000);
+    //     return () => clearInterval(interval);
+    // }, []);
+
+
     const handleUpdateClick = () => {
 
         // check the if the set point is a valid number
@@ -81,9 +91,12 @@ function Heater() {
                 setHeater(prev => ({
                     ...prev,
                     setPoint: data.set_point,
-                    objectiveTemperature: data.objective_temperature
+                    objectiveTemperature: data.objective_temperature,
+                    lastUpdated: new Date().toLocaleTimeString(),
+                    // timeSeriesSetPoints : data.time_series_set_points,
+                    // timeSeriesObjectiveTemperatures : data.time_series_objective_temperatures,
+                    // timeSeriesTimes : data.time_series_times
                 }));
-                console.log(data);
             };
 
             ws.onopen = () => {
@@ -158,26 +171,38 @@ function Heater() {
                 <Card className="rounded-bottom">
                     <CardBody>
                         <p className='fs-6 fw-bold mb-2'>
+                            Last Update:
+                            <span style={{ color: (heater.isOnline && heater.lastUpdated >= 0) ? 'green' : 'gray' }}>
+                                {heater.lastUpdated != null ? ` ${heater.lastUpdated}` : ' NA'}
+                            </span>
+                        </p>
+
+                        <p className='fs-6 fw-bold mb-2'>
                             Objective Temperature:
-                            <span style={{ color: (heater.isOnline && heater.objectiveTemperature   >= 0) ? 'green' : 'gray' }}>
-                                {heater.objectiveTemperature >= 0 ? ` ${heater.objectiveTemperature.toFixed(1)}` : 'NA'}
+                            <span style={{ color: (heater.isOnline && heater.objectiveTemperature >= 0) ? 'green' : 'gray' }}>
+                                {heater.objectiveTemperature >= 0 ? ` ${heater.objectiveTemperature.toFixed(1)}` : ' NA'}
                             </span>
                         </p>
                         <p className='fs-6 fw-bold mb-3'>
                             Set Point:
-                            <span style={{ color: (heater.isOnline && heater.setPoint  >= 0) ? 'green' : 'gray' }}>
-                                {heater.setPoint >= 0 ? ` ${heater.setPoint.toFixed(1)} ` : 'NA'}
+                            <span style={{ color: (heater.isOnline && heater.setPoint >= 0) ? 'green' : 'gray' }}>
+                                {heater.setPoint >= 0 ? ` ${heater.setPoint.toFixed(1)} ` : ' NA'}
                             </span>
                         </p>
-                        <div className="row mb-3 fs-6 fw-bold">
-                            <label className="form-label col-sm-6">
+                        <div className="row">
+                            <label className="form-label col-sm-6 mb-4 fs-6 fw-bold">
                                 Set Current Set Point:
                             </label>
                             <div className="col-sm-6">
-                                <Input type="number" step="0.1" value={heater.setPointSetAt.toFixed(1)} onChange={(event) => setHeater(prev => ({ ...prev, setPointSetAt: parseFloat(event.target.value).toFixed(1) }))} className="form-control" />
+                                <Input type="number" step="0.1" value={heater.setPointSetAt} onChange={(event) => setHeater(prev => ({ ...prev, setPointSetAt: parseFloat(event.target.value).toFixed(1) }))} className="form-control" />
                             </div>
                         </div>
                         <Button color="primary" onClick={handleUpdateClick} className="btn" style={{ width: '100%' }}>Update Set Point</Button>
+                        {/* <img
+                            src={`http://10.0.63.153:4031/plot?${imageKey}`}
+                            alt="Plot"
+                            style={{ width: '100%' }}
+                        /> */}
                     </CardBody>
                 </Card>
             </Collapse>

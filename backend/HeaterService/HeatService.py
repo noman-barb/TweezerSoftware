@@ -14,6 +14,12 @@ from threading import Lock
 from fastapi.middleware.cors import CORSMiddleware
 # import dequeue for storing the data
 from collections import deque
+import matplotlib.pyplot as plt
+import matplotlib
+# plotting as agg
+matplotlib.use('Agg')
+import cv2
+from fastapi.responses import FileResponse
 
 
 class ConnectionManager:
@@ -25,7 +31,14 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+
+        try:
+            with serial_lock:
+                self.active_connections.remove(websocket)
+
+        except Exception as e:
+            print(f"Error disconnecting: {e}")
+        
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
@@ -71,13 +84,9 @@ objective_temperature_deque = deque(maxlen=1000)
 set_point_deque = deque(maxlen=1000)
 time_deque = deque(maxlen=1000)
 
-
-
-
-
-        
-
 serial_lock = Lock()
+
+start_time = time.time()
 
 def parse_return_data(data, identifier, data_type_func = str):
 
@@ -230,13 +239,13 @@ def thread_fucn_update_temp():
 def thread_worker_update_to_dequee():
     global objective_temperature, set_point, objective_temperature_deque, set_point_deque, time_deque
     while True:
-        time.sleep(5)
+        time.sleep(2)
         # get the current time
         current_time = time.time()
         # push the data to the deques
         objective_temperature_deque.append(objective_temperature)
         set_point_deque.append(set_point)
-        time_deque.append(current_time)
+        time_deque.append(current_time - start_time)
 
 
 
@@ -250,6 +259,12 @@ async def get_temperature():
     return {"success": True, "msg": f"Temperature is {objective_temperature}", "data": {"objective_temperature": objective_temperature, "set_point": set_point}}
 
 
+
+# serve the plot
+# @app.get("/plot")
+# async def plot():
+#     return FileResponse("./plots/plot.png")
+
         
 # web sockets part
 @app.websocket("/ws")
@@ -258,15 +273,27 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             receive_task = asyncio.create_task(websocket.receive_json())
+
+            # plot the time series data
+            # plt.figure(figsize=(12, 8))
+            # plt.plot(list(time_deque), list(objective_temperature_deque), label="Objective Temperature", linewidth=3, color='red', marker='o', linestyle='dashed')
+            # plt.plot(list(time_deque), list(set_point_deque), label="Set Point", linewidth=5, color='blue', marker='o', linestyle='dashed')
+            # plt.xlabel("Time (s)", fontsize=44)
+            # plt.ylabel("Temperature (C)", fontsize=44)
+            # plt.legend(fontsize=36)
+            # plt.grid()
+            # plt.savefig("./plots/plot.png", dpi = 72)
+            # plt.ylim(18, 37)
+            # plt.close()
+
+            # broadcast the data with figure as base64
             broadcast_task = asyncio.create_task(
                 manager.broadcast({"set_point": set_point, "objective_temperature": objective_temperature,
                 
-                "previous_objective_temperature": list(objective_temperature_deque),
-                "previous_set_point": list(set_point_deque),
-                "previous_time": list(time_deque)
-                
+                # "time_series_objective_temperatures": list(objective_temperature_deque),
+                # "time_series_set_points": list(set_point_deque),
+                # "time_series_times": list(time_deque)                
                 })
-                
             )
 
             done, pending = await asyncio.wait({receive_task, broadcast_task}, return_when=asyncio.FIRST_COMPLETED)
@@ -276,13 +303,11 @@ async def websocket_endpoint(websocket: WebSocket):
             else:
                 receive_task.cancel()
 
-            await asyncio.sleep(0.25)  # sleep for 0.25 seconds
+            await asyncio.sleep(0.5)  # sleep for 0.25 seconds
     except (WebSocketDisconnect, ConnectionClosed):
         manager.disconnect(websocket)
     finally:
         await websocket.close()
-
-
 
 
 if __name__ == '__main__':
@@ -290,7 +315,7 @@ if __name__ == '__main__':
     t1 = threading.Thread(target=thread_fucn_update_temp)
     t1.daemon = True
     t1.start()
-    t2 = threading.Thread(target=thread_worker_update_to_dequee)
-    t2.daemon = True
-    t2.start()
+    # t2 = threading.Thread(target=thread_worker_update_to_dequee)
+    # t2.daemon = True
+    # t2.start()
     uvicorn.run(app, host='0.0.0.0', port=4031)

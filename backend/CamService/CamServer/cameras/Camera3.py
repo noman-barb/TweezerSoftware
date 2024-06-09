@@ -11,7 +11,7 @@ import time
 import os
 
 
-IMAGE_EXTENSIONS = ['.tif', '.tiff', '.png', '.jpg', '.jpeg']
+IMAGE_EXTENSIONS = ['.tif', '.tiff', '.png', '.jpg', '.jpeg', '.bmp']
 COMMENT = "Virtual Camera 1, folder watcher"
 IS_REAL = False
 
@@ -19,14 +19,16 @@ class FolderHandler(FileSystemEventHandler):
     def __init__(self, camera):
         self.camera = camera
         self.last_change = -1
+        self.image_id = 0
 
     def on_created(self, event):
 
-        image_id  = 0
+        
     
         if not event.is_directory and os.path.splitext(event.src_path)[1].lower() in IMAGE_EXTENSIONS:
 
             current_time_ms = int(round(time.time() * 1000))
+            print(f"MAIN: New image detected: {event.src_path}", flush=True)
             if current_time_ms - self.last_change > self.camera.wait_time:
                 print(f"New image detected: {event.src_path}", flush=True)
                 self.camera.last_path = event.src_path
@@ -38,26 +40,29 @@ class FolderHandler(FileSystemEventHandler):
                 count_fail = 1
                 while True:
                     try:
-                        self.camera.current_frame = cv2.imread(event.src_path)
+                        # read grayscale image
+                        self.camera.current_frame = cv2.imread(event.src_path, cv2.IMREAD_GRAYSCALE)
                         if self.camera.current_frame is None:
-                            print(f"Failed to read image {count_fail}", flush=True)
+                            #print(f"Failed to read image {count_fail}", flush=True)
                             count_fail += 1
                         else:
-                            print(f"Image read successfully", flush=True)
+                            #print(f"Image read successfully", flush=True)
                             break
                             
                 
                         if count_fail > 10:
-                            print(f"Failed to read image finally {count_fail} times", flush=True)
+                            #print(f"Failed to read image finally {count_fail} times", flush=True)
                             break
                         time.sleep(0.01)
                     except:
-                        print(f"Failed to read image {count_fail}", flush=True)
+                        time.sleep(0.01)
+                        #print(f"Failed to read image {count_fail}", flush=True)
                         count_fail += 1
                         pass
-                    time.sleep(0.01)
-                self.camera.on_update(image_id, self.camera.current_frame)
-                image_id += 1
+                    
+                #print("Updating from camera 3", flush=True)
+                self.camera.on_update(self.image_id, self.camera.current_frame)
+                self.image_id += 1
 
  
 

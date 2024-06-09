@@ -130,6 +130,8 @@ class CamServer:
 
             try:
 
+                #print("Image updated", image_id)
+
 
 
 

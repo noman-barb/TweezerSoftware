@@ -129,6 +129,7 @@ function TrackBar() {
 
             const connectToWebSocketForTrackDetails = () => {
                 const ws = new WebSocket("ws://10.0.63.153:4012/ws");
+                console.log("Trying to connect to websocket: Track Details");
                 ws.onmessage = (event) => {
                     // the data has x and y which are arrays of x and y coordinates of the particles
                     // show the particles on the canvasRefs[3] as a scatter plot

@@ -132,9 +132,6 @@ function CameraPreview() {
 
 
 
-
-
-
   useEffect(() => {
     const fetchCameraDetails = async () => {
       if (cameras[1].showModalSettings || cameras[2].showModalSettings) {

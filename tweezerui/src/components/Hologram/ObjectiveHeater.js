@@ -78,7 +78,7 @@ function Heater() {
 
 
     useEffect(() => {
-        let intervalId;
+      
 
         const connectToWebSocketForTrackDetails = () => {
             if (heaterWebsocket) {
@@ -86,6 +86,7 @@ function Heater() {
             }
 
             const ws = new WebSocket(`ws://${serverInfo.heaterserver[1].ip}:${serverInfo.heaterserver[1].portWS}/ws`);
+            console.log("Trying to connect to websocket: Objective Heater")
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 setHeater(prev => ({
@@ -100,13 +101,14 @@ function Heater() {
             };
 
             ws.onopen = () => {
-                console.log(`Connected to Track Server`);
-                clearInterval(intervalId); // Clear the interval once connected
+                console.log(`Connected to objective heater server`);
             };
             ws.onerror = (error) => console.error('WebSocket error track server:', error);
             ws.onclose = () => {
-                console.log(`Disconnected from Track Server`);
-                intervalId = setInterval(connectToWebSocketForTrackDetails, 2000); // Try to reconnect every 2 seconds
+                setHeater(prev => ({ ...prev, isOnline: false }));
+                setheaterWebsocket(null);
+                console.log(`Disconnected from objective heater server`);
+                setTimeout(() => connectToWebSocketForTrackDetails(), 1000);
             };
 
             setheaterWebsocket(ws);
@@ -114,13 +116,7 @@ function Heater() {
 
         connectToWebSocketForTrackDetails();
 
-        return () => {
-            if (heaterWebsocket) {
-                heaterWebsocket.close();
-                setheaterWebsocket(null);
-            }
-            clearInterval(intervalId); // Clear the interval when the component unmounts
-        };
+
     }, []);
 
 

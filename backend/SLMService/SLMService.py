@@ -244,6 +244,9 @@ if __name__ == '__main__':
     center_x = width // 2
     center_y = height // 2
 
+    # print height, width, depth, Bytes
+    print(f"Image width: {width}, Image height: {height}, Image depth: {depth}, Bytes per pixel: {Bytes}")
+
     print(f"Image width: {width}, Image height: {height}, Image depth: {depth}, Bytes per pixel: {Bytes}")
 
     # Load LUT file based the SLM LCD dimensions
@@ -270,33 +273,41 @@ if __name__ == '__main__':
     write_image(WFC)
 
     # initalize hologram generator
-    is_hologram_generator_initialized = image_lib.Initialize_HologramGenerator(width, height, depth, 1000, 0)
+    is_hologram_generator_initialized = image_lib.Initialize_HologramGenerator(width, height, depth, 10, 0)
     print("Hologram generator initialized:", is_hologram_generator_initialized)
 
     # generate hologram image for postion x= (-5, 0, 0) and (5, 0, 0) with intensity 1
-    x_spots = np.array([-10, 10], dtype=np.float32)
-    y_spots = np.array([0, 0], dtype=np.float32)
-    z_spots = np.array([0, 0], dtype=np.float32)
-    I_spots = np.array([1, 1], dtype=np.float32)
-    N_spots = 2
+    # x_spots = np.array([-10, 10], dtype=np.float32)
+    # y_spots = np.array([0, 0], dtype=np.float32)
+    # z_spots = np.array([0, 0], dtype=np.float32)
+    # I_spots = np.array([1, 1], dtype=np.float32)
+    # N_spots = 2
+    # ApplyAffine = 0
+
+    n = 300
+    x_spots = np.random.uniform(-400, 400, n).astype(np.float32)
+    y_spots = np.random.uniform(-400, 400, n).astype(np.float32)
+    z_spots = np.zeros(n, dtype=np.float32)
+    I_spots = np.ones(n, dtype=np.float32)
+    N_spots = n
     ApplyAffine = 0
+
     
     # generate and store it in ImageHologram
     print("Generating hologram")
+    
+    
+    start_time = time.time()
     image_lib.Generate_Hologram(hologram_image_1.ctypes.data_as(POINTER(c_ubyte)), WFC.ctypes.data_as(POINTER(c_float)), x_spots.ctypes.data_as(POINTER(c_float)), y_spots.ctypes.data_as(POINTER(c_float)), z_spots.ctypes.data_as(POINTER(c_float)), I_spots.ctypes.data_as(POINTER(c_float)), N_spots, ApplyAffine)
+    print("Time taken to generate hologram:", time.time() - start_time)
+    
+    
+    
     print("Hologram generated")
     # reshape the image to 2D
     hologram_1_reshaped_to_image = hologram_image_1.reshape((height, width, Bytes))
     # save the image
     cv2.imwrite("hologram1.png", hologram_1_reshaped_to_image)
-    # swap x and y
-    x_spots, y_spots = y_spots, x_spots
-    # generate and store it in ImageHologram
-    image_lib.Generate_Hologram(hologram_image_2.ctypes.data_as(POINTER(c_ubyte)), WFC.ctypes.data_as(POINTER(c_float)), x_spots.ctypes.data_as(POINTER(c_float)), y_spots.ctypes.data_as(POINTER(c_float)), z_spots.ctypes.data_as(POINTER(c_float)), I_spots.ctypes.data_as(POINTER(c_float)), N_spots, ApplyAffine)
-    # hologram_reshaped_to_image = ImageHologram.reshape((height, width, Bytes))
-    # save the image
-    hologram_2_reshaped_to_image = hologram_image_2.reshape((height, width, Bytes))
-    cv2.imwrite("hologram2.png", hologram_2_reshaped_to_image)
     
     
     
@@ -317,10 +328,8 @@ if __name__ == '__main__':
 
 
     while True:
-
+        
         write_image(hologram_image_1)
-        time.sleep(0.5)
-        write_image(hologram_image_2)
         time.sleep(0.5)
 
         print("Hologram looped")

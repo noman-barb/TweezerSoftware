@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Collapse, CardBody, Card, CardTitle, Input } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
@@ -8,31 +8,34 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Slide } from 'react-toastify';
+import Spinner from 'react-bootstrap/Spinner'; // or from 'react-spinners';
 
 
 function Heater() {
 
 
     const { serverInfo, heater, setHeater } = useGlobalContext();
-
-
     const [heaterWebsocket, setheaterWebsocket] = useState(null);
-
     const heaterServerURL = `http://${serverInfo.heaterserver[1].ip}:${serverInfo.heaterserver[1].portHTTP}`;
+
+    const [isRampToSetPoint, setIsRampToSetPoint] = useState(false);
+    const [stayAheadValue, setStayAheadValue] = useState(0.5);
+    const [rampSetPointValue, setRampSetPointValue] = useState(20);
+    const heaterObjectiveTemperatureByRef = useRef(heater.objectiveTemperature);
+    const isRampWorking = useRef(false);
+
+
+
+    // useeffect to update the set point
+
+    useEffect(() => {
+        heaterObjectiveTemperatureByRef.current = heater.objectiveTemperature;
+    }, [heater.objectiveTemperature]);
+
 
     const toggle = () => {
         setHeater(prev => ({ ...prev, isCollapsed: !prev.isCollapsed }));
     };
-
-    const [imageKey, setImageKey] = useState(Date.now());
-
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         setImageKey(Date.now());
-    //     }, 2000);
-    //     return () => clearInterval(interval);
-    // }, []);
-
 
     const handleUpdateClick = () => {
 
@@ -78,7 +81,7 @@ function Heater() {
 
 
     useEffect(() => {
-      
+
 
         const connectToWebSocketForTrackDetails = () => {
             if (heaterWebsocket) {
@@ -139,6 +142,67 @@ function Heater() {
 
 
 
+    useEffect(() => {
+
+        const job = () => {
+
+
+            if (!isRampToSetPoint) {
+                isRampWorking.current = false;
+                return;
+            }
+
+            if (!heater.isOnline) {
+                isRampWorking.current = false;
+                return;
+            }
+
+
+            if (heaterObjectiveTemperatureByRef.current - rampSetPointValue < -0.1){
+                const newTemp = Math.min(rampSetPointValue, heaterObjectiveTemperatureByRef.current + stayAheadValue);
+                setHeater(prev => ({ ...prev, setPointSetAt: newTemp }));
+                
+
+                axios.post(`${heaterServerURL}/set_temperature`, {
+                    temperature: newTemp
+                })
+                    .then((response) => {
+                        isRampWorking.current = true;
+                    })
+                    .catch((error) => {
+                        isRampWorking.current = false;
+                    });
+            }
+            else if (heaterObjectiveTemperatureByRef.current - rampSetPointValue >  0.1) {
+                const newTemp = Math.max(rampSetPointValue, heaterObjectiveTemperatureByRef.current - stayAheadValue);
+                setHeater(prev => ({ ...prev, setPointSetAt: newTemp }));
+
+                axios.post(`${heaterServerURL}/set_temperature`, {
+                    temperature: newTemp
+                })
+                    .then((response) => {
+                        isRampWorking.current = true;
+                    })
+                    .catch((error) => {
+                        isRampWorking.current = false;
+                    });
+            }
+            else{
+                showToast('Ramp to Set Point Completed', 'success');
+                isRampWorking.current = false;
+                setIsRampToSetPoint(false);
+            }
+
+        };
+
+        const intervalId = setInterval(() => {
+            job();
+        }, 1000);
+
+        return () => clearInterval(intervalId);
+    }, [isRampToSetPoint]);
+
+
 
     return (
         <div>
@@ -164,7 +228,7 @@ function Heater() {
                 </div>
             </div>
             <Collapse isOpen={heater.isCollapsed}>
-            <Card style={{ borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px', borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
+                <Card style={{ borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px', borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
                     <CardBody>
                         <p className='fs-6 fw-bold mb-2'>
                             Last Update:
@@ -193,7 +257,75 @@ function Heater() {
                                 <Input type="number" step="0.1" value={heater.setPointSetAt} onChange={(event) => setHeater(prev => ({ ...prev, setPointSetAt: parseFloat(event.target.value).toFixed(1) }))} className="form-control" />
                             </div>
                         </div>
-                        <Button color="primary" onClick={handleUpdateClick} className="btn" style={{ width: '100%' }}>Update Set Point</Button>
+
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                            <Button color="primary" onClick={handleUpdateClick} className="btn" style={{ flex: '0 0 47%' }}>
+                                Update Set Point
+                            </Button>
+
+                            <div style={{ flex: '0 0 20%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                {
+                                    heater.isOnline && Math.abs(heater.setPoint - heater.objectiveTemperature) > 0.14 &&
+                                    <Spinner animation="border" role="status" style={{ width: '2rem', height: '2rem', color: heater.setPoint > heater.objectiveTemperature ? 'orange' : 'blue' }}>
+                                        <span className="sr-only">Loading...</span>
+                                    </Spinner>
+                                }
+                            </div>
+
+                        </div>
+
+                        <div className="row mt-3 mb-3">
+                            <div className="col-sm-6 fw-bold">
+                                <label for="temperature">Ramp to Temperature</label>
+                                <Input
+                                    id="temperature"
+                                    type="number"
+                                    className="form-control"
+                                    placeholder='Temperature'
+                                    step="0.1"
+                                    value={rampSetPointValue}
+                                    onChange={(event) => setRampSetPointValue(parseFloat(event.target.value))}
+                                />
+                            </div>
+                            <div className="col-sm-6 fw-bold">
+                                <label for="rate">Stay Ahead</label>
+                                <Input
+                                    id="stayaheadvalue"
+
+                                    className="form-control"
+                                    placeholder='Rate'
+                                    type="number"
+                                    step="0.05"
+                                    value={stayAheadValue}
+                                    onChange={(event) => setStayAheadValue(parseFloat(event.target.value))}
+                                />
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                            <Button
+                            
+                                onClick={() => setIsRampToSetPoint(!isRampToSetPoint)}
+                                className= {isRampToSetPoint ? "btn btn-danger" : "btn btn-primary"}
+                                style={{ flex: '0 0 47%' }}
+                            >
+                                {isRampToSetPoint ? "Stop Ramp" : "Ramp to"}
+                            </Button>
+
+                            <div style={{ flex: '0 0 20%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                {
+                                    heater.isOnline && isRampWorking.current &&
+                                    <Spinner
+                                        animation="border"
+                                        role="status"
+                                        style={{ width: '2rem', height: '2rem', color: heater.setPoint > heater.objectiveTemperature ? 'orange' : 'blue' }}
+                                    >
+                                        <span className="sr-only">Loading...</span>
+                                    </Spinner>
+                                }
+                            </div>
+                        </div>
+
                         {/* <img
                             src={`http://10.0.63.153:4031/plot?${imageKey}`}
                             alt="Plot"

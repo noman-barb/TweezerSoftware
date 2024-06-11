@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 
-const ws = new WebSocket('ws://10.0.63.153:4031/ws');
+const ws = new WebSocket('ws://10.0.63.153:4041');
 
 let messageCount = 0;
 let dataSize = 0;
@@ -25,14 +25,17 @@ ws.on('open', () => {
 
 ws.on('message', (data) => {
 
+  // get the message as string
+  const message = data.toString();
+
   // get data in readable format
-  const message = JSON.parse(data);
   console.log('Received message:', message);
   messageCount++;
    dataSize += data.length;
 });
 
 ws.on('close', () => {
+  // close the connection
   console.log('Disconnected from the WebSocket server');
 });
 
@@ -41,9 +44,10 @@ ws.on('error', (error) => {
 });
 
 
-// keep sending a msg "hello" every 1 second;
-// setInterval(() => {
-//   // send json "msg: hello"
-//   ws.send(JSON.stringify({ msg: 'hello' }));
+//keep sending a msg "hello" every 1 second;
 
-// }, 1000);
+setInterval(() => {
+  // send json "msg: hello"
+  ws.send(JSON.stringify({ msg: 'hello' }));
+
+}, 1000);

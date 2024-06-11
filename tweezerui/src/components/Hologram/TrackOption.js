@@ -94,7 +94,7 @@ function TrackBar() {
 
         axios.post(`${trackServerUrl}/set_track_params`, data)
             .then(response => {
-                console.log(response);
+                
             })
             .catch(error => {
                 console.log(error);

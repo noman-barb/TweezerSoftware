@@ -20,51 +20,7 @@ function CameraPreview() {
 
   let drawing = false;
 
-  const draw = (event) => {
-    if (!drawing) return;
-    const canvas = canvasRefs[4].current;
-    const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect(); // get the position of the canvas
-
-    const x = event.clientX - drawProps.startX;
-    const y = event.clientY - drawProps.startY;
-
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = 'red';
-
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const startDrawing = (event) => {
-    drawing = true;
-    draw(event);
-  };
-
-  const stopDrawing = () => {
-    drawing = false;
-    const canvas = canvasRefs[4].current;
-    const ctx = canvas.getContext('2d');
-    ctx.beginPath();
-  };
-
-  useEffect(() => {
-    const canvas = canvasRefs[4].current;
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-
-    return () => {
-      canvas.removeEventListener('mousedown', startDrawing);
-      canvas.removeEventListener('mousemove', draw);
-      canvas.removeEventListener('mouseup', stopDrawing);
-      canvas.removeEventListener('mouseout', stopDrawing);
-    };
-  }, []);
+ 
 
 
 

@@ -35,7 +35,8 @@ export const CanvasProvider = ({ children }) => {
     "cameras": "cameras",
     "cameraserver": "cameraserver",
     "trackoptions": "trackoptions",
-    "heatoptions": "heatoptions"
+    "heatoptions": "heatoptions",
+    "slmOptions": "slmOptions",
   }
 
   const [serverInfo, setServerInfo] = useState({
@@ -225,6 +226,67 @@ export const CanvasProvider = ({ children }) => {
     localStorage.setItem(localStorageIDs.heatoptions, JSON.stringify(heater));
   }, [heater.isCollapsed]);
 
+
+
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////   Hologram options //////////////////////////////////////////////////////////////////////////
+
+  const [slmOptions, setSLMOptions] = useState(() => {
+    // Load initial camera state from localStorage
+    const storedSLMOptions = JSON.parse(localStorage.getItem(localStorageIDs.slmOptions)) || {};
+
+
+    
+    return {
+      isCollapsed: storedSLMOptions.isCollapsed || false,
+      isOnline: false,
+      isAffineCollapsed : false,
+      affine: {
+        SLM_X_0: 10,
+        SLM_Y_0: 10,
+        CAM_X_0: 10,
+        CAM_Y_0: 10,
+        SLM_X_1: -20,
+        SLM_Y_1: -20,
+        CAM_X_1: -20,
+        CAM_Y_1: -20,
+        SLM_X_2: -30,
+        SLM_Y_2: 10,
+        CAM_X_2: -30,
+        CAM_Y_2: 10,
+        ...storedSLMOptions.affine
+      },
+      points:{
+        xArray: [],
+        yArray: [],
+        zArray: [],
+        intensityArray: [],
+        ...storedSLMOptions.points
+      }
+  
+      
+    };
+  });
+
+
+  // save the hologram options to local storage on change of isCollapsed
+  useEffect(() => {
+    localStorage.setItem(localStorageIDs.slmOptions, JSON.stringify(slmOptions));
+  }, [slmOptions]);
+
+
+
+
+  ///////////////////////////////////////
+
+
+
+
+
+
+
   return (
     <GlobalContext.Provider value={{ canvasRefs, 
     imageProps, setImageProps, 
@@ -233,7 +295,8 @@ export const CanvasProvider = ({ children }) => {
     cameras, setCameras,
     trackOptions, setTrackOptions   ,
     trackOptionsMinMaxVals,
-    heater, setHeater
+    heater, setHeater,
+    slmOptions, setSLMOptions
     }}>
       {children}
     </GlobalContext.Provider>

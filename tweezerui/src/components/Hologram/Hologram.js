@@ -10,6 +10,7 @@ import { Button, Form } from 'react-bootstrap';
 import { useGlobalContext } from '../../GlobalContext';
 import TrackBar from './TrackOption';
 import Heater from './ObjectiveHeater';
+import SLMOptions from './SLMOptions'
 
 function Hologram() {
     
@@ -21,8 +22,11 @@ function Hologram() {
             <div className="row mb-3">
                 <TrackBar trackOptions={trackOptions} setTrackOptions={setTrackOptions} />
             </div>
-            <div className="row">
+            <div className="row  mb-3">
                 <Heater />
+            </div>
+            <div className="row  mb-3">
+                <SLMOptions />
             </div>
         </div>
     );

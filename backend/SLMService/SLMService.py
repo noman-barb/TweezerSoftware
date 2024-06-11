@@ -546,7 +546,17 @@ if __name__ == '__main__':
             image_lib.Generate_Hologram(hologram_image_1.ctypes.data_as(POINTER(c_ubyte)), WFC.ctypes.data_as(POINTER(c_float)), x_array.ctypes.data_as(POINTER(c_float)), y_array.ctypes.data_as(POINTER(c_float)), z_array.ctypes.data_as(POINTER(c_float)), intensity_array.ctypes.data_as(POINTER(c_float)), len(x_array), 1)
             # save image as png
             image_reshaped = hologram_image_1.reshape((height, width, Bytes))
-            cv2.imwrite("hologram.png", image_reshaped)
+            folder_name = int(time.time()*1e6)
+            folder_path = f"./data/{folder_name}"
+            # create folder if not exists
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+
+            cv2.imwrite(f"./{folder_path}/hologram.bmp", image_reshaped)
+
+            # save the points as a csv file
+            np.savetxt(f"./{folder_path}/points.csv", np.column_stack((x_array, y_array, z_array, intensity_array)), delimiter=",", header="x,y,z,intensity", comments='')
+            
             print(f"Image generated in {time.time() - start_time:.3f} seconds")
             write_image(hologram_image_1)
             print(f"Hologram written in {time.time() - start_time:.3f} seconds")

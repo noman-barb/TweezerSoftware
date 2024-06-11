@@ -124,16 +124,16 @@ function CameraPreview() {
     }));
   };
 
-  useEffect(() => {
-    const canvas = canvasRefs[4].current;
-    const context = canvas.getContext('2d');
+  // useEffect(() => {
+  //   const canvas = canvasRefs[4].current;
+  //   const context = canvas.getContext('2d');
 
-    // Draw a hollow circle at x =100, y = 50
-    context.beginPath();
-    context.arc(150, 50, 20, 0, 2 * Math.PI);
-    context.stroke();
+  //   // Draw a hollow circle at x =100, y = 50
+  //   context.beginPath();
+  //   context.arc(150, 50, 20, 0, 2 * Math.PI);
+  //   context.stroke();
 
-  }, []);
+  // }, []);
 
   useEffect(() => {
     const updateCameraComment = (cameraId) => {
@@ -659,7 +659,7 @@ function CameraPreview() {
           ref={canvasRefs[1]}
           style={{
             gridArea: '1 / 1 / 2 / 2',
-            opacity: 1.0,
+            opacity: 0.5,
             zIndex: 1,
             backgroundColor: 'transparent',
           }}
@@ -678,7 +678,7 @@ function CameraPreview() {
           ref={canvasRefs[3]}
           style={{
             gridArea: '1 / 1 / 2 / 2',
-            opacity: 1.0,
+            opacity: 0.5,
             zIndex: 3,
             backgroundColor: 'transparent',
 
@@ -690,7 +690,7 @@ function CameraPreview() {
           ref={canvasRefs[4]}
           style={{
             gridArea: '1 / 1 / 2 / 2',
-            opacity: 1.0,
+            opacity: 0.5,
             zIndex: 4,
             backgroundColor: 'transparent'
 

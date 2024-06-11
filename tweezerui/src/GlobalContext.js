@@ -243,6 +243,8 @@ export const CanvasProvider = ({ children }) => {
       isCollapsed: storedSLMOptions.isCollapsed || false,
       isOnline: false,
       isAffineCollapsed : false,
+      currentZ: storedSLMOptions.currentZ || 0.0,
+      currentIntensity: storedSLMOptions.currentIntensity || 1.0,
       affine: {
         SLM_X_0: 10,
         SLM_Y_0: 10,

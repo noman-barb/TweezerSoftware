@@ -13,14 +13,17 @@ import Heater from './ObjectiveHeater';
 import SLMOptions from './SLMOptions'
 
 function Hologram() {
-    
+
     const { trackOptions, setTrackOptions } = useGlobalContext();
 
 
     return (
         <div className="container">
-            <div className="row mb-3">
-                <TrackBar trackOptions={trackOptions} setTrackOptions={setTrackOptions} />
+            <div className="row mb-3 mt-3">
+                <TrackBar
+                    trackOptions={trackOptions}
+                    setTrackOptions={setTrackOptions}
+                />
             </div>
             <div className="row  mb-3">
                 <Heater />

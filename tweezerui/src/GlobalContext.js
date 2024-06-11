@@ -49,6 +49,9 @@ export const CanvasProvider = ({ children }) => {
     },
     "heaterserver": {
       1: { "ip": "10.0.63.153", "portHTTP": "4031", "username": "", "password": "", "portWS": "4031" },
+    },
+    "slmserver": {
+      1: {"ip": "10.0.63.153", "portHTTP": "4041", "username": "", "password": "", "portWS": "4041"}
     }
   });
 
@@ -266,7 +269,14 @@ export const CanvasProvider = ({ children }) => {
         zArray: [],
         intensityArray: [],
         ...storedSLMOptions.points
-      }
+      },
+      focalSpot:{
+        x: 0,
+        y: 0,
+        z: 0,
+        intensity: 1,
+        id: "",
+      },
   
       
     };

@@ -678,7 +678,7 @@ function CameraPreview() {
           ref={canvasRefs[3]}
           style={{
             gridArea: '1 / 1 / 2 / 2',
-            opacity: 0.5,
+            opacity: 1.0,
             zIndex: 3,
             backgroundColor: 'transparent',
 
@@ -690,7 +690,7 @@ function CameraPreview() {
           ref={canvasRefs[4]}
           style={{
             gridArea: '1 / 1 / 2 / 2',
-            opacity: 0.5,
+            opacity: 1.0,
             zIndex: 4,
             backgroundColor: 'transparent'
 

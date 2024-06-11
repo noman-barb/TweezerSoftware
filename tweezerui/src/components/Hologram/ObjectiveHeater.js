@@ -164,7 +164,7 @@ function Heater() {
                 </div>
             </div>
             <Collapse isOpen={heater.isCollapsed}>
-                <Card className="rounded-bottom">
+            <Card style={{ borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px', borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
                     <CardBody>
                         <p className='fs-6 fw-bold mb-2'>
                             Last Update:

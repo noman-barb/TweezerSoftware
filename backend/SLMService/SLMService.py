@@ -151,6 +151,10 @@ def data_communicator(shared_dict, lock):
             shared_dict['affine']['CAM_Y_2'] = CAM_Y_2
             shared_dict['affine']['last_data_received'] = data_received_time
 
+            # also modify the last data received time for the points to the current time so that the points are updated with the new affine values
+            shared_dict['points']['last_data_received'] = data_received_time
+
+
 
         # add to broadcast queue with the necceassary data that has to be sent to all clients
         broadcast_queue.append({
@@ -172,6 +176,7 @@ def data_communicator(shared_dict, lock):
                 
                 try:
                     data = json.loads(message)
+                   
                     if data['command'] == 'add_points' or data['command'] == 'update_points' or data['command'] == 'remove_points':
                         process_points(data,data['command'])
                     elif data['command'] == 'get_points':
@@ -548,14 +553,15 @@ if __name__ == '__main__':
             image_reshaped = hologram_image_1.reshape((height, width, Bytes))
             folder_name = int(time.time()*1e6)
             folder_path = f"./data/{folder_name}"
+
+
             # create folder if not exists
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
+            # if not os.path.exists(folder_path):
+            #     os.makedirs(folder_path)
 
-            cv2.imwrite(f"./{folder_path}/hologram.bmp", image_reshaped)
-
-            # save the points as a csv file
-            np.savetxt(f"./{folder_path}/points.csv", np.column_stack((x_array, y_array, z_array, intensity_array)), delimiter=",", header="x,y,z,intensity", comments='')
+            # cv2.imwrite(f"./{folder_path}/hologram.bmp", image_reshaped)
+            # # save the points as a csv file
+            # np.savetxt(f"./{folder_path}/points.csv", np.column_stack((x_array, y_array, z_array, intensity_array)), delimiter=",", header="x,y,z,intensity", comments='')
             
             print(f"Image generated in {time.time() - start_time:.3f} seconds")
             write_image(hologram_image_1)

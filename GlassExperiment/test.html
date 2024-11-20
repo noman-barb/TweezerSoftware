@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assamese Cognitive Shuffling</title>
+</head>
+
+<body>
+    <h1>Assamese Cognitive Shuffling</h1>
+    <button id="startBtn">Start</button>
+    <button id="stopBtn">Stop</button>
+    <audio id="bgMusic" src="https://www.example.com/path-to-your-music.mp3" loop></audio>
+
+    <script>
+        // List of items in Assamese
+        const items = [
+            "Ekhan tebulor uporot ekhon ronga apel.",
+            "Ekhan paleng choukite shuoi thoka ebidh mekurI.",
+            "Ekhan gashor osorot rokha ekhon baike.",
+            "Surujor pohorat juruli thoka ek gakhir bonor chobi.",
+            "Ekhan kapor pora bogai thoka gorom chah.",
+            "Ejoniya pokhi akashor majere urise.",
+            "Ekhan khola kitab tebulor uporot.",
+            "Ekhan balir cherate dhoor muror xobdo.",
+            "Ekhan dhowa diya momobati.",
+            "Rongchongiya gamuchar ek thup.",
+            "Ekhan bhiror majot ek sojib bajar.",
+            "Ekhan xishuye charit bichaok uruaise.",
+            "Ekhan poriyale ratipuwat logot khabo.",
+            "Ekhan dalongor tolote boi thoka nodi.",
+            "Ekhan kundulit gashor uporot ek gor.",
+            "Ejon carpenter-e kathot hatora mari.",
+            "Ekhan sojib brishtit bija janolir kach.",
+            "Eta pathshalar pora xontan sokole prosno korile.",
+            "Ek rondonxalat piyaj kata ejon rondhok.",
+            "Ekhan fulor uporot bahi thoka ebidh pokhila.",
+            "Ekhan mothot boga xopore gashot uthise.",
+            "Ekhan borfore abrita porbot.",
+            "Ekhan muga jolashoyor uporot thoka jonor pohor.",
+            "Ejon kormi jal bunise.",
+            "Ekhan nishar andharot jola pok.",
+            "Ekhan akashor majot eta rongdhonu.",
+            "Ekhan nodir pukhurir panit xaturo mash.",
+            "Ejon bonor cherate xap.",
+            "Ekhan rong ful phuli thoka morubhumI.",
+            "Ekhan sanglass pindha kokorI.",
+            "Ekhan chobit rong kora ejon hati.",
+            "Eta gaxe pohoror patere dhuki.",
+            "Eta akashot uronto dip.",
+            "Eta roller skate pindha eti jiraph.",
+            "Eta bishal juta akritir ghor.",
+            "Eta nije bajE thoka piano.",
+            "Eta kitabor kachot alternet bishwa.",
+            "Eta chaharpatra akritir mohakash jahn.",
+            "Eta poka pholor dore pohor hoy.",
+            "Eta kencha sonar nodi.",
+            "Eta rati xichi thoka suwala ful.",
+            "Eta boga nodir uporot utha jolopropat.",
+            "Eta mishtire bhora durg.",
+            "Eta jolonto momobati.",
+            "Eta gachar patrere light.",
+            "Eta golachitar akritir pol.",
+            "Eta poroshpathore bhora dhol."
+
+        ];
+
+        // Shuffle function
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Speech function
+        function getAssameseVoice() {
+            const voices = speechSynthesis.getVoices();
+            console.log("Available voices:", voices.map(v => `${v.name} (${v.lang})`));
+            return voices.find(voice => voice.lang === 'as-IN');
+        }
+
+        // Modify the speakList function
+        function speakList(shuffledItems) {
+            const synth = window.speechSynthesis;
+            let index = 0;
+
+            // Wait for voices to load
+            speechSynthesis.onvoiceschanged = () => {
+                const assameseVoice = getAssameseVoice();
+                console.log("Assamese voice available:", !!assameseVoice);
+
+                function speakNext() {
+                    if (index < shuffledItems.length) {
+                        const utterance = new SpeechSynthesisUtterance(shuffledItems[index]);
+                        utterance.lang = 'as-IN';
+
+                        if (assameseVoice) {
+                            utterance.voice = assameseVoice;
+                        }
+
+                        utterance.onend = () => {
+                            index++;
+                            setTimeout(speakNext, 500); // Add small delay between items
+                        };
+
+                        utterance.onerror = (e) => {
+                            console.error('Speech error:', e);
+                            index++;
+                            speakNext();
+                        };
+
+                        console.log('Speaking:', shuffledItems[index]);
+                        synth.speak(utterance);
+                    }
+                }
+
+                speakNext();
+            };
+        }
+        // Background Music Control
+        const bgMusic = document.getElementById("bgMusic");
+
+        // Event Listeners
+        document.getElementById("startBtn").addEventListener("click", () => {
+            const shuffledItems = shuffle([...items]);
+            speakList(shuffledItems);
+
+            //bgMusic.play(); // Play background music
+        });
+
+        document.getElementById("stopBtn").addEventListener("click", () => {
+            window.speechSynthesis.cancel(); // Stop any ongoing speech
+            //bgMusic.pause(); // Pause background music
+            //bgMusic.currentTime = 0; // Reset music to start
+        });
+    </script>
+</body>
+
+</html>

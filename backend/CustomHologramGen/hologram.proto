@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package hologram;
+
+message HologramRequest {
+    int32 height = 1;
+    int32 width = 2;
+    int32 depth = 3;
+    int32 iterations = 4;
+    bool is_rgb = 5;
+    bool is_apply_affine = 6;
+
+    bytes x_array = 7;
+    bytes y_array = 8;
+    bytes z_array = 9;
+    bytes intensity_array = 10;
+
+    float SLM_X_0 = 11;
+    float SLM_Y_0 = 12;
+    float CAM_X_0 = 13;
+    float CAM_Y_0 = 14;
+
+    float SLM_X_1 = 15;
+    float SLM_Y_1 = 16;
+    float CAM_X_1 = 17;
+    float CAM_Y_1 = 18;
+
+    float SLM_X_2 = 19;
+    float SLM_Y_2 = 20;
+    float CAM_X_2 = 21;
+    float CAM_Y_2 = 22;
+}
+
+message HologramResponse {
+    bytes hologram_image = 1;
+    int32 height = 2;
+    int32 width = 3;
+}
+
+service HologramGeneratorService {
+    rpc GenerateHologram (HologramRequest) returns (HologramResponse);
+}

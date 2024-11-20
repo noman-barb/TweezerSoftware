@@ -24,7 +24,7 @@ function CameraPreview() {
 
 
 
-  const [maxWidth, setMaxWidth] = useState(1000);
+  const [maxWidth, setMaxWidth] = useState(1456);
 
 
 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
 from websockets.exceptions import ConnectionClosed
 from fastapi.templating import Jinja2Templates
 import signal
@@ -12,15 +12,13 @@ import threading
 import asyncio
 from threading import Lock
 from fastapi.middleware.cors import CORSMiddleware
-# import dequeue for storing the data
 from collections import deque
 import matplotlib.pyplot as plt
 import matplotlib
-# plotting as agg
 matplotlib.use('Agg')
 import cv2
 from fastapi.responses import FileResponse
-
+from typing import List
 
 class ConnectionManager:
     def __init__(self):
@@ -31,14 +29,11 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-
         try:
             with serial_lock:
                 self.active_connections.remove(websocket)
-
         except Exception as e:
             print(f"Error disconnecting: {e}")
-        
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
@@ -53,10 +48,7 @@ class ConnectionManager:
                 self.disconnect(connection)
 
 
-
-
 app = FastAPI()
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,53 +57,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
 manager = ConnectionManager()
 
-temp_min = 18.0
-temp_max = 37.0
-ID = "C274"
-BAUD_RATE = 9600
-timeout = 5
-set_point = 20.0
-objective_temperature = 20.0
+# Heater settings
+heater_temp_min = 18.0
+heater_temp_max = 37.0
+heater_id = "C274"
+heater_baud_rate = 9600
+heater_timeout = 5
+heater_set_point = 20.0
+heater_objective_temperature = 20.0
 is_dont_send_read_cmd = False
 
-# deques for storing the data
-max_len = 1000
-objective_temperature_deque = deque(maxlen=1000)
-set_point_deque = deque(maxlen=1000)
-time_deque = deque(maxlen=1000)
+# Chiller settings
+chiller_id = "CH826"
+chiller_baud_rate = 9600
+chiller_timeout = 5
+chiller_set_point = 20.0
+chiller_liquid_temperature = 20.0
+chiller_flow = False
+
+
+connection_error = False
+connection_error_msg = ""
+
 
 serial_lock = Lock()
-
 start_time = time.time()
 
-def parse_return_data(data, identifier, data_type_func = str):
-
+def parse_return_data(data, identifier, data_type_func=str):
     try:
-
         data = data.split(":")
-
-        # now split data[0] by _
         data_id = data[0].split("_")
-
-        # now check if the identifier is in the data_id
-        if not identifier in data_id:
+        if identifier not in data_id:
             return None
-
-        # now split data[1] by _ and get the first element
-        return data_type_func( data[1].split("_END")[0])
-
+        return data_type_func(data[1].split("_END")[0])
     except Exception as e:
         print(f"Error parsing data: {e}")
         return None
 
-    # example data is DATA_ID:C274_
-    # i need to get C274
-    # split the data by :
-    
 def identify_cmd():
     return "CMD_IDENTIFY_END"
 
@@ -121,7 +105,14 @@ def get_temp_cmd(identifier):
 def set_temp_cmd(temp):
     return f"CMD_SETTEMP_{temp}_END"
 
+def set_flow_cmd(flow):
+    return f"CMD_SETFLOW_{1 if flow else 0}_END"
+
+def get_flow_cmd():
+    return "CMD_GETFLOWIF_END"
+
 def send_cmd(ser, cmd):
+
     with serial_lock:
         ser.flushInput()
         ser.flushOutput()
@@ -131,32 +122,31 @@ def send_cmd(ser, cmd):
         ser.flushOutput()
         return read_str
 
-def read_data(ser):
-    return ser.readline().decode().strip()
-
 def get_temp(ser, identifier):
     cmd = get_temp_cmd(identifier)
     ret_data = send_cmd(ser, cmd)
+    print(f"Received temperature data: {ret_data}")
     return parse_return_data(ret_data, identifier, float)
 
+def get_flow(ser):
+    cmd = get_flow_cmd()
+    ret_data = send_cmd(ser, cmd)
+    print(f"Received flow data: {ret_data}")
+    return parse_return_data(ret_data, "FL", lambda x: x == "1")
 
-# Function to find the correct serial port
 def find_serial_port(ID):
     ports = list(serial.tools.list_ports.comports())
-    # reverse the list
     ports.reverse()
     for port in ports:
         print(f"Trying to open port {port.device}")
         try:
-            # SET DTR AND RTS TO false
-            ser = serial.Serial(port.device, BAUD_RATE, timeout=timeout)
+            ser = serial.Serial(port.device, heater_baud_rate, timeout=heater_timeout)
             ser.dtr = False
             ser.rts = False
-            ser.flushInput()  # Flush input buffer
-            ser.flushOutput()  # Flush output buffer
+            ser.flushInput()
+            ser.flushOutput()
             ser.readline()
             print(f"Opened port {port.device}")
-            # send ascii command to the device
             ser.write(b"CMD_IDENTIFY_END")
             print("Sent IDENTIFY command")
             response = ser.readline().decode().strip()
@@ -171,148 +161,165 @@ def find_serial_port(ID):
             print(f"Failed to open port {port.device}: {e}")
     return None
 
+heater_serial_port = find_serial_port(heater_id)
+chiller_serial_port = find_serial_port(chiller_id)
 
+if heater_serial_port is None or chiller_serial_port is None:
+    raise Exception(f"Could not find serial port for {heater_id} or {chiller_id}")
 
-SERIAL_PORT = find_serial_port(ID)
-if SERIAL_PORT is None:
-    raise Exception(f"Could not find serial port for {ID}")
+print(f"Detected serial port {heater_serial_port} for heater")
+print(f"Detected serial port {chiller_serial_port} for chiller")
 
-print(f"Using serial port {SERIAL_PORT}")
+ser_heater = serial.Serial(heater_serial_port, heater_baud_rate, timeout=heater_timeout)
+ser_heater.dtr = False
+ser_heater.rts = False
+ser_heater.readline()
 
-# Open the serial connection
-ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=timeout)
-# set dtr and rts to false
-ser.dtr = False
-ser.rts = False
-# read any data that may be in the buffer
-ser.readline()
-
-
-
+ser_chiller = serial.Serial(chiller_serial_port, chiller_baud_rate, timeout=chiller_timeout)
+ser_chiller.dtr = False
+ser_chiller.rts = False
+ser_chiller.readline()
 
 def cleanup(signum, frame):
     print("Cleaning up resources...")
-    if ser.is_open:
-        ser.close()
+    if ser_heater.is_open:
+        ser_heater.close()
+    if ser_chiller.is_open:
+        ser_chiller.close()
     os._exit(0)
-
 
 class TempRequest(BaseModel):
     temperature: float
 
-@app.post("/set_temperature")
-async def set_temperature(temp_request: TempRequest):
-    global objective_temperature, set_point
-   
-    # round the temperature to 1 decimal place
-    requested_temperature = np.around(temp_request.temperature, 1)
-    print(f"Setting temperature to {requested_temperature}")
-    
-    # check for min max
-    if requested_temperature < temp_min or requested_temperature > temp_max:
-        raise HTTPException(status_code=400, detail="Temperature out of range")
+class FlowRequest(BaseModel):
+    flow: bool
 
-    # set the temperature
+@app.post("/heater/set_temperature")
+async def set_heater_temperature(temp_request: TempRequest):
+    global heater_objective_temperature, heater_set_point
+    requested_temperature = np.around(temp_request.temperature, 1)
+    print(f"Setting heater temperature to {requested_temperature}")
+    if requested_temperature < heater_temp_min or requested_temperature > heater_temp_max:
+        raise HTTPException(status_code=400, detail="Temperature out of range")
     cmd = set_temp_cmd(requested_temperature)
     print(f"Sending command: {cmd}")
-    ret_data = send_cmd(ser, cmd)
-    return {"success": True, "msg": f"Temperature set to {requested_temperature}"}
+    ret_data = send_cmd(ser_heater, cmd)
+    return {"success": True, "msg": f"Heater temperature set to {requested_temperature}"}
 
+@app.get("/heater/get_temperature")
+async def get_heater_temperature():
+    return {"success": True, "msg": f"Heater temperature is {heater_objective_temperature}", "data": {"objective_temperature": heater_objective_temperature, "set_point": heater_set_point}}
 
-def thread_fucn_update_temp():
-    global objective_temperature, set_point, is_dont_send_read_cmd
+@app.post("/chiller/set_temperature")
+async def set_chiller_temperature(temp_request: TempRequest):
+    global chiller_liquid_temperature, chiller_set_point
+    requested_temperature = np.around(temp_request.temperature, 1)
+    print(f"Setting chiller temperature to {requested_temperature}")
+    cmd = set_temp_cmd(requested_temperature)
+    print(f"Sending command: {cmd}")
+    ret_data = send_cmd(ser_chiller, cmd)
+    return {"success": True, "msg": f"Chiller temperature set to {requested_temperature}"}
+
+@app.post("/chiller/set_flow")
+async def set_chiller_flow(flow_request: FlowRequest):
+    global chiller_flow
+    print(f"Setting chiller flow to {flow_request.flow}")
+    cmd = set_flow_cmd(flow_request.flow)
+    print(f"Sending command: {cmd}")
+    ret_data = send_cmd(ser_chiller, cmd)
+    return {"success": True, "msg": f"Chiller flow set to {flow_request.flow}"}
+
+@app.get("/chiller/get_temperature")
+async def get_chiller_temperature():
+    return {"success": True, "msg": f"Chiller temperature is {chiller_liquid_temperature}", "data": {"objective_temperature": chiller_liquid_temperature, "set_point": chiller_set_point}}
+
+@app.get("/chiller/get_flow")
+async def get_chiller_flow():
+    return {"success": True, "msg": f"Chiller flow is {'on' if chiller_flow else 'off'}", "data": {"flow": chiller_flow}}
+
+def thread_func_update_temp():
+    global heater_objective_temperature, heater_set_point, chiller_liquid_temperature, chiller_set_point, chiller_flow, is_dont_send_read_cmd, connection_error, connection_error_msg
     while True:
         time.sleep(0.25)
-        if is_dont_send_read_cmd:
-            continue
-        _ot = get_temp(ser, 'OT')
-        if _ot is not None:
-            objective_temperature = _ot
+
+        err_msg = ""
+
+        try:
+            if is_dont_send_read_cmd:
+                continue
+            _hot = get_temp(ser_heater, 'OT')
+            if _hot is not None:
+                heater_objective_temperature = _hot
+            _hst = get_temp(ser_heater, 'ST')
+            if _hst is not None:
+                heater_set_point = _hst
+
+        except Exception as e:
+            connection_error = True
+            err_msg += "Error communicating with heater"
             
-        _st = get_temp(ser, 'ST')
-        if _st is not None:
-            set_point = _st
+        try:
+            _cot = get_temp(ser_chiller, 'CT')
+            if _cot is not None:
+                chiller_liquid_temperature = _cot
+            _cst = get_temp(ser_chiller, 'ST')
+            if _cst is not None:
+                chiller_set_point = _cst
+                print(f"Chiller set point: {chiller_set_point}")
+            _flow = get_flow(ser_chiller)
+            if _flow is not None:
+                chiller_flow = _flow
 
-        #print(f"Objective temperature is {_ot}, set point is {_st}")
-        
-# thread worker to update the temperature data every 5 seconds by reading the data from objective_temperaturem and set_point
-def thread_worker_update_to_dequee():
-    global objective_temperature, set_point, objective_temperature_deque, set_point_deque, time_deque
-    while True:
-        time.sleep(2)
-        # get the current time
-        current_time = time.time()
-        # push the data to the deques
-        objective_temperature_deque.append(objective_temperature)
-        set_point_deque.append(set_point)
-        time_deque.append(current_time - start_time)
+        except Exception as e:
+            connection_error = True
+            if len(err_msg) > 0:
+                err_msg += " and "
+            err_msg += "Error communicating with chiller"
 
-
-
+        if connection_error:
+            connection_error_msg = err_msg
+            print(err_msg)
+           
 
 @app.get("/heartbeat")
 async def heartbeat():
-    return {"success": True, "msg": "Heartbeat", "data":{}}
-
-@app.get("/get_temperature")
-async def get_temperature():
-    return {"success": True, "msg": f"Temperature is {objective_temperature}", "data": {"objective_temperature": objective_temperature, "set_point": set_point}}
+    if connection_error:
+        return {"success": False, "msg": connection_error_msg}
 
 
+    return {"success": True, "msg": "Heartbeat", "data": {}}
 
-# serve the plot
-# @app.get("/plot")
-# async def plot():
-#     return FileResponse("./plots/plot.png")
-
-        
-# web sockets part
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
             receive_task = asyncio.create_task(websocket.receive_json())
-
-            # plot the time series data
-            # plt.figure(figsize=(12, 8))
-            # plt.plot(list(time_deque), list(objective_temperature_deque), label="Objective Temperature", linewidth=3, color='red', marker='o', linestyle='dashed')
-            # plt.plot(list(time_deque), list(set_point_deque), label="Set Point", linewidth=5, color='blue', marker='o', linestyle='dashed')
-            # plt.xlabel("Time (s)", fontsize=44)
-            # plt.ylabel("Temperature (C)", fontsize=44)
-            # plt.legend(fontsize=36)
-            # plt.grid()
-            # plt.savefig("./plots/plot.png", dpi = 72)
-            # plt.ylim(18, 37)
-            # plt.close()
-
-            # broadcast the data with figure as base64
             broadcast_task = asyncio.create_task(
-                manager.broadcast({"set_point": set_point, "objective_temperature": objective_temperature,
-                
-                # "time_series_objective_temperatures": list(objective_temperature_deque),
-                # "time_series_set_points": list(set_point_deque),
-                # "time_series_times": list(time_deque)                
+                manager.broadcast({
+                    "heater_set_point": heater_set_point,
+                    "heater_objective_temperature": heater_objective_temperature,
+                    "chiller_set_point": chiller_set_point,
+                    "chiller_liquid_temperature": chiller_liquid_temperature,
+                    "chiller_flow": chiller_flow,
+                    "connection_error": connection_error,
+                    "connection_error_msg": connection_error_msg
                 })
             )
-
             done, pending = await asyncio.wait({receive_task, broadcast_task}, return_when=asyncio.FIRST_COMPLETED)
-
             if receive_task in done:
                 data = receive_task.result()
             else:
                 receive_task.cancel()
-
-            await asyncio.sleep(0.5)  # sleep for 0.25 seconds
+            await asyncio.sleep(0.5)
     except (WebSocketDisconnect, ConnectionClosed):
         manager.disconnect(websocket)
     finally:
         await websocket.close()
 
-
 if __name__ == '__main__':
     import uvicorn
-    t1 = threading.Thread(target=thread_fucn_update_temp)
+    t1 = threading.Thread(target=thread_func_update_temp)
     t1.daemon = True
     t1.start()
     # t2 = threading.Thread(target=thread_worker_update_to_dequee)

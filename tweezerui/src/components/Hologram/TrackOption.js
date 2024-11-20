@@ -136,6 +136,7 @@ function TrackBar() {
                     const data = JSON.parse(event.data);
                     const x = data.x;
                     const y = data.y;
+                    setTrackOptions(prev => ({ ...prev, nFeatures: x.length }));
 
                     const ctx = canvasRefs[3].current.getContext('2d');
                     ctx.clearRect(0, 0, canvasRefs[3].current.width, canvasRefs[3].current.height);
@@ -207,7 +208,10 @@ function TrackBar() {
             <Collapse isOpen={trackOptions.isOpenTrackOption}>
                 <Card style={{ borderBottomLeftRadius: '10px', borderBottomRightRadius: '10px', borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
                     <CardBody>
+                    <h5>N features: {trackOptions.nFeatures} </h5>
                         <div className="d-flex align-items-center">
+                        
+                      
                             <span className="me-3 fs-6 fw-bold" style={{ color: "black" }}>Recieve Stream</span>
                             <div className="form-check form-switch fs-5">
                                 <input

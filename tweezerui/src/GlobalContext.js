@@ -160,6 +160,7 @@ export const CanvasProvider = ({ children }) => {
       gridX: storedTrackOptions.gridX || 500,
       gridY: storedTrackOptions.gridY || 500,
       overlap: storedTrackOptions.overlap || 100,
+      nFeatures: 0,
       
     };
   });
@@ -195,15 +196,7 @@ export const CanvasProvider = ({ children }) => {
 
   ///////////////// heater state /////////////////
 
-  // const [heater, setHeater] = useState({
-  //   objectiveTemperature: -1,
-  //   setPoint: -1,
-  //   setPointSetAt: 20.0,
-  //   isHeaterServiceOnline: false,
-  //   minSetPoint: 17.5,
-  //   maxSetPoint: 36.0,
-  //   isCollapsed: false,
-  // });
+  
 
   const [heater, setHeater] = useState(() => {
     // Load initial camera state from localStorage
@@ -219,7 +212,8 @@ export const CanvasProvider = ({ children }) => {
       timeSeriesSetPoints: null,
       timeSeriesObjectiveTemperatures: null,
       timeSeriesTimes: null,
-      lastUpdated: null
+      lastUpdated: null,
+      chillerSetPointAt:storedHeater.chillerSetPointAt || 20.0,
     };
   }
   );
@@ -230,9 +224,6 @@ export const CanvasProvider = ({ children }) => {
   }, [heater.isCollapsed]);
 
 
-
-
-
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////   Hologram options //////////////////////////////////////////////////////////////////////////
 
@@ -240,8 +231,6 @@ export const CanvasProvider = ({ children }) => {
     // Load initial camera state from localStorage
     const storedSLMOptions = JSON.parse(localStorage.getItem(localStorageIDs.slmOptions)) || {};
 
-
-    
     return {
       isCollapsed: storedSLMOptions.isCollapsed || false,
       isOnline: false,

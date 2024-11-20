@@ -445,7 +445,7 @@ function SLMOptions() {
             // draw the points from the slmPointsData
             // while drawing, scale down the points
             // color --> faint orange
-            const color = [160, 32, 240];
+            const color = [123, 254, 0];
 
             for (let i = 0; i < slmPointsData.points.x_array.length; i++) {
 
